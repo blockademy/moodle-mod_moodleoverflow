@@ -146,11 +146,11 @@ class ratings {
 
             // If there is an old rating, update it. Else create a new rating record.
             if ($otherrating) {
-                return self::moodleoverflow_update_rating_record($post->id, $rating, $userid, $otherrating->id, $modulecontext);
+                return self::moodleoverflow_update_rating_record($post->id, $rating, $userid, $post->userid, $otherrating->id, $modulecontext);
             } else {
                 $mid = $moodleoverflow->id;
 
-                return self::moodleoverflow_add_rating_record($mid, $discussion->id, $post->id, $rating, $userid, $modulecontext);
+                return self::moodleoverflow_add_rating_record($mid, $discussion->id, $post->id, $rating, $userid, $post->userid, $modulecontext);
             }
         }
 
@@ -169,14 +169,14 @@ class ratings {
             }
 
             // Update the rating record.
-            return self::moodleoverflow_update_rating_record($post->id, $rating, $userid, $oldrating['normal']->id, $modulecontext);
+            return self::moodleoverflow_update_rating_record($post->id, $rating, $userid, $post->userid, $oldrating['normal']->id, $modulecontext);
         }
 
         // Create a new rating record.
         $mid = $moodleoverflow->id;
         $did = $post->discussion;
 
-        return self::moodleoverflow_add_rating_record($mid, $did, $postid, $rating, $userid, $modulecontext);
+        return self::moodleoverflow_add_rating_record($mid, $did, $postid, $rating, $userid, $post->userid, $modulecontext);
     }
 
     /**
@@ -722,7 +722,7 @@ class ratings {
      *
      * @return bool|int
      */
-    private static function moodleoverflow_add_rating_record($moodleoverflowid, $discussionid, $postid, $rating, $userid, $mod) {
+    private static function moodleoverflow_add_rating_record($moodleoverflowid, $discussionid, $postid, $rating, $userid, $post_userid, $mod) {
         global $DB;
 
         // Create the rating record.
@@ -742,6 +742,9 @@ class ratings {
         $params = array(
             'objectid' => $recordid,
             'context'  => $mod,
+            'userid'   => $userid,
+            'other'    => $rating,
+            'relateduserid' => $post_userid            
         );
         $event = \mod_moodleoverflow\event\rating_created::create($params);
         $event->trigger();
@@ -761,7 +764,7 @@ class ratings {
      *
      * @return bool
      */
-    private static function moodleoverflow_update_rating_record($postid, $rating, $userid, $ratingid, $modulecontext) {
+    private static function moodleoverflow_update_rating_record($postid, $rating, $userid, $post_userid, $ratingid, $modulecontext) {
         global $DB;
 
         // Update the record.
@@ -773,6 +776,9 @@ class ratings {
         $params = array(
             'objectid' => $ratingid,
             'context'  => $modulecontext,
+            'userid'   => $userid,
+            'other'    => $rating,
+            'relateduserid' => $post_userid
         );
         $event = \mod_moodleoverflow\event\rating_updated::create($params);
         $event->trigger();
